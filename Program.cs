@@ -5,72 +5,77 @@ using MimeDetective;
 using MimeDetective.Engine;
 using MimeMapping;
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        string rootDirectory = ".";
-        CheckDirectory(rootDirectory);
-    }
+class Program {
+	// https://github.com/MediatedCommunications/Mime-Detective
+	static readonly ContentInspector Inspector =
+		new ContentInspectorBuilder() {
+			Definitions =
+				new MimeDetective.Definitions
+					.ExhaustiveBuilder() { UsageType = MimeDetective.Definitions.Licensing.UsageType.PersonalNonCommercial }
+					.Build()
+		}
+			.Build();
 
-    static void CheckDirectory(string directoryPath)
-    {
-        try
-        {
-            string[] files = Directory.GetFiles(directoryPath);
-            foreach (string file in files)
-            {
-                CheckFile(file);
-            }
+	static void Main(string[] args) {
+		string rootDirectory = ".";
+		CheckDirectory(rootDirectory);
+	}
 
-            string[] subDirectories = Directory.GetDirectories(directoryPath);
-            foreach (string subDirectory in subDirectories)
-            {
-                CheckDirectory(subDirectory);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error processing {directoryPath}: {ex.Message}");
-        }
-    }
+	static void CheckDirectory(string directoryPath) {
+		try {
+			string[] files = Directory.GetFiles(directoryPath);
+			foreach (string file in files) {
+				CheckFile(file);
+			}
 
-    static void CheckFile(string filePath)
-    {
-        try
-        {
-            string extension = Path.GetExtension(filePath).ToLower();
-            if (string.IsNullOrEmpty(extension))
-            {
-                return; // Skip files without extensions
-            }
+			string[] subDirectories = Directory.GetDirectories(directoryPath);
+			foreach (string subDirectory in subDirectories) {
+				CheckDirectory(subDirectory);
+			}
+		} catch (Exception ex) {
+			Console.WriteLine($"Error processing {directoryPath}: {ex.Message}");
+		}
+	}
 
-            byte[] fileData = File.ReadAllBytes(filePath);
-            var inspector = new ContentInspectorBuilder().Build();
-            ImmutableArray<DefinitionMatch> matches = inspector.Inspect(fileData);
-            var contentType = GetMostLikelyMimeType(matches);
+	static void CheckFile(string filePath) {
+		string extension = Path.GetExtension(filePath).ToLower();
+		if (string.IsNullOrEmpty(extension)) {
+			return; // Skip files without extensions
+		}
+		extension = extension.Substring(1);
 
-            string expectedMimeType = MimeUtility.GetMimeMapping(filePath);
+		var likelyExtensions = new List<string>();
+		var Results = Inspector.Inspect(filePath);
+		foreach (var Result in Results)
+			foreach (var e in Result.Definition.File.Extensions) {
+				likelyExtensions.Add(e);
+			}
 
-            if (!expectedMimeType.Equals(contentType, StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine($"Mismatch: {filePath} (Extension: {extension} | Content Type: {contentType})");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error processing {filePath}: {ex.Message}");
-        }
-    }
+		if (!likelyExtensions.Any())
+			return;
+		if (likelyExtensions.Contains(extension))
+			return;
+		switch (extension) {
+		case "dll":
+			if (likelyExtensions.Contains("exe"))
+				return;
+			break;
+		}
 
-    static string GetMostLikelyMimeType(ImmutableArray<DefinitionMatch> matches)
-    {
-        if (matches.Any())
-        {
-            // Assuming the first match is the best one
-            var bestMatch = matches.First();
-            return bestMatch.Definition.
-        }
-        return "unknown/unknown";
-    }
+		Console.WriteLine(filePath);
+		Console.WriteLine(extension);
+		foreach (var Result in Results) {
+			Console.Write('\t');
+			Console.WriteLine(Result.Definition.File.Description);
+
+			Console.Write("\t\t");
+			Console.WriteLine(string.Join(", ", Result.Definition.File.Extensions));
+
+			Console.Write("\t\t");
+			Console.WriteLine(string.Join(", ", Result.Definition.File.Categories));
+
+			Console.Write("\t\t");
+			Console.WriteLine(Result.Definition.File.MimeType);
+		}
+	}
 }
