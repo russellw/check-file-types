@@ -44,7 +44,7 @@ class Program {
 		if (string.IsNullOrEmpty(extension)) {
 			return; // Skip files without extensions
 		}
-		extension = extension.Substring(1);
+		extension = extension[1..];
 
 		var likelyExtensions = new List<string>();
 		var Results = Inspector.Inspect(filePath);
@@ -65,7 +65,6 @@ class Program {
 		}
 
 		Console.WriteLine(filePath);
-		Console.WriteLine(extension);
 		foreach (var Result in Results) {
 			Console.Write('\t');
 			Console.WriteLine(Result.Definition.File.Description);
