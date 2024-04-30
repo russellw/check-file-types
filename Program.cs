@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.IO;
 using MimeDetective;
 using MimeDetective.Engine;
-using MimeMapping;
 
 class Program {
 	// https://github.com/MediatedCommunications/Mime-Detective
@@ -60,6 +59,14 @@ class Program {
 		switch (extension) {
 		case "dll":
 			if (likelyExtensions.Contains("exe"))
+				return;
+			break;
+		case "log":
+			if (likelyExtensions.Contains("txt"))
+				return;
+			break;
+		case "htm":
+			if (likelyExtensions.Contains("html"))
 				return;
 			break;
 		}
