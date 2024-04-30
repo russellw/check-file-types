@@ -13,12 +13,5 @@ check-file-types
 
 Installing:
 
-MimeMapping.3.0.1
-
-
-check-file-types
-
-Installing:
-
 Mime-Detective.Definitions.Exhaustive.23.10.1
 ```
