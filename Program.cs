@@ -18,6 +18,8 @@ class Program {
 
 	static void Main(string[] args) {
 		string rootDirectory = ".";
+		if (args.Length > 0)
+			rootDirectory = args[0];
 		CheckDirectory(rootDirectory);
 	}
 
